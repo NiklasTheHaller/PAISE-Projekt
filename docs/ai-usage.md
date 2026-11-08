@@ -1,178 +1,115 @@
-# 🤖 Dokumentation des KI-Einsatzes & Reflexion: Phase 1
+# 🤖 Dokumentation des KI-Einsatzes & Kritische Reflexion (Phase 1)
 
-**Projekt:** DocuPulse (Rust Edition)  
+**Projekt:** DocuPulse – Leichtgewichtige Document Processing API (PDF-zu-JSON)  
 **Phase:** 1 – Produktspezifikation & Anforderungsanalyse  
-**Technologie-Fokus:** Rust (Axum, Tokio, Serde)  
-**Zweck:** Transparente Protokollierung der tatsächlichen Interaktion zwischen dem Projektteam (Mensch) und dem KI-Assistenten sowie Vorbereitung der menschlichen Reflexion.
+**Eingesetzte KI-Anwendungen:**  
+1. Exploration, Domänen-Schärfung & Generierung von User Stories / Akzeptanzkriterien  
+2. Strukturierung funktionaler/nichtfunktionaler Anforderungen & MVP-Abgrenzung  
+3. Qualitäts-Audit: Prüfung auf Widersprüche, Lücken und typische Requirements-Engineering-Fehler  
 
 ---
 
-## 1. Übersicht & Ziel des KI-Einsatzes
+## 1. Übersicht & Methodik des KI-Einsatzes
 
-In Phase 1 wurde die KI als **interaktiver Requirements Engineer, Sparring-Partner und Dokumentations-Assistent** eingesetzt. Ausgangspunkt war eine bewusst offene Aufgabenstellung aus dem Modul:
-
+Ausgangspunkt unseres Projekts war das bewusst offen formulierte Thema:
 > *„Document Processing API: Dokumente hochladen, analysieren und strukturierte Daten extrahieren (ist mit Absicht nicht genau definiert).“*
 
-Ziel des KI-Einsatzes war es, durch iterativen Dialog aus dieser vagen Vorgabe eine fokussierte, realistische und technisch anspruchsvolle Produktspezifikation zu entwickeln.
+Wir haben KI nicht als „blinden Textgenerator“ verwendet, sondern in einem **iterativen Mensch-KI-Prozess** (Prompt → KI-Entwurf → Kritische Prüfung durch das Team → Gezielte Korrektur). Dabei kam die KI in **drei unterschiedlichen Anwendungsbereichen** des Requirements Engineerings zum Einsatz:
+1. **Anforderungs-Elicitation & User-Story-Generierung:** Ableitung konkreter Developer-Personas und testbarer User Stories (im Given-When-Then-Format) aus unserer groben Projektidee.
+2. **Scoping & Priorisierung (MoSCoW):** Eingrenzung eines im Semester realistisch umsetzbaren MVPs („PDF rein → JSON raus“).
+3. **Validierung & Widerspruchsprüfung:** Systematischer Abgleich gegen die Bewertungskriterien und „Typischen Fehler“ der Aufgabenstellung.
 
 ---
 
-## 2. Chronologisches Interaktionsprotokoll (Prompts & KI-Aktionen)
+## 2. Ausgewählte Prompts, KI-Ergebnisse & Kritische Bewertung
 
-### 💬 Interaktionsschritt 1: Initialer Projektauftrag
+### 💬 Schritt 1: Initiale Strukturierung der offenen Projektidee
 
-#### Prompt des Nutzers (Wortlaut):
+#### Verwendeter Prompt (Auszug):
 ```text
-Mir machen ein projekt indem wir KI verwenden sollen. Das folgende ist wichtig:
+Wir machen ein Projekt, in dem wir KI verwenden sollen.
+Unser Thema -> Document Processing API: Dokumente hochladen, analysieren und strukturierte Daten extrahieren (ist mit Absicht nicht genau definiert).
+Ziel: Aus einer groben Idee eine strukturierte und umsetzbare Produktspezifikation entwickeln.
+```
 
-Unser Thema -> Document Processing API: Dokumente hochladen, analysieren und strukturierte Daten extrahieren
+#### Ergebnis der KI:
+- Die KI erkannte, dass die Aufgabenstellung bewusst unterbestimmt war, und stellte gezielte Rückfragen zu Fachdomäne und Verarbeitungsmodus.
+- Nach unserer Auswahl (*Flexible Developer API mit Standardprofil `invoice` + Custom JSON-Schema*) generierte die KI einen ersten kompletten Spezifikationsentwurf mit 11 User Stories, einer Python/FastAPI-Architektur, OCR-Pipelines und asynchroner Queue.
 
-Ist mit absicht nicht genau definiert.
+#### 🔍 Kritische Bewertung & Korrektur durch das Team:
+- **Was gut war:** Die Strukturierung der Domäne (Kombination aus sofort nutzbarem `invoice`-Profil und flexiblem `schema`-Parameter) sowie die Gherkin-Akzeptanzkriterien (`Given/When/Then`) sparten enorm viel Zeit.
+- **Was wir korrigieren mussten:** Der erste KI-Entwurf war für ein Semesterprojekt zu breit angelegt (unterstützte gleichzeitig Bilder, Scans, Webhooks und Datenbank-Konzepte) und legte ungefragt Python/FastAPI fest. Wir haben daraufhin aktiv gegengesteuert.
 
-Hier ist phase 1:
+---
 
-Ziel
-Aus einer groben Idee eine strukturierte und umsetzbare Produktspezifikation entwickeln.
+### 💬 Schritt 2: Fokussierung des MVPs & Technologische Ausrichtung auf Rust
 
-TODOs
-- Projektidee und Problemstellung definieren
-- Zielgruppe und wichtigste Anwendungsfälle identifizieren
-- AI zur Anforderungsanalyse einsetzen
+#### Verwendeter Prompt (Wortlaut):
+```text
+Wir wollen zuerst einen MVP erstellen und definieren. Dafür wollen wir uns mal nur auf PDFs lesen können und als JSON ausgeben. Dafür wollen wir Rust verwenden.
+- Zielgruppe: Wir denken Developer sind unsere Zielgruppe
+- AI zur Anforderungsanalyse einsetzen: Bitte unterstütze uns hierbei
 - Mindestens 8–10 User Stories erstellen
-- Funktionale und nichtfunktionale Anforderungen definieren
-- Anforderungen priorisieren (Must/Should/Could)
-- MVP-Scope festlegen
+- Funktionale und nichtfunktionale Anforderungen definieren & priorisieren (Must/Should/Could)
+- MVP-Scope festlegen: PDF lesen, JSON ausgeben
 - Anforderungen auf Widersprüche und Unklarheiten prüfen
-
-Deliverables
-- README.md – Projektüberblick
-- docs/requirements.md – Anforderungen und User Stories
-- docs/ai-usage.md – AI-Einsatz und Reflexion
 ```
 
-#### Was die KI damit gemacht hat:
-1. **Workspace- und Codebase-Inspektion:**
-   - Analyse des Repositories: Nur eine leere `README.md` (`# PAISE-Projekt`) war vorhanden.
-2. **Strukturierung des Vorgehens:**
-   - Identifikation der offenen Parameter (Fachdomäne und Verarbeitungsmodus).
-3. **Interaktive Rückfrage an den Nutzer:**
-   - Formulierung konkreter Optionen zur Schärfung des Projektkerns via Multiple-Choice.
+#### Ergebnis der KI:
+- Komplette Überarbeitung der User Stories auf die Zielgruppe **Software-Entwickler** (Backend-, Frontend-, DevOps-Personas).
+- Reduktion des Eingabeformats auf reine PDF-Dateien (`application/pdf`) und strikte JSON-Ausgabe.
+- Identifikation wichtiger technischer Konflikte (z. B. *Statische Typisierung vs. dynamisches JSON-Schema zur Laufzeit* sowie *Synchrone PDF-Parser vs. asynchrone Server-Laufzeit*).
+
+#### 🔍 Kritische Bewertung & Korrektur durch das Team:
+- **Identifiziertes Problem 1 (Vermischung von Tech-Stack und Anforderungen):** Die KI war nach unserem Hinweis auf Rust „übereifrig“ und schrieb spezifische Rust-Bibliotheken (`axum`, `tokio`, `lopdf`) direkt in die fachlichen Anforderungen und definierte sogar `NFA-01: Tech-Stack = Rust`. Laut Aufgabenstellung (*„5. Typische Fehler vermeiden: Technologiewahl, bevor die Anforderungen verstanden wurden“*) ist genau das ein klassischer Fehler.
+- **Identifiziertes Problem 2 (Zu viele Must-Haves):** Die KI stufte im zweiten Entwurf **8 von 10 User Stories** und fast alle funktionalen Anforderungen als `Must-Have` ein – inklusive eines komplexen Vision-/OCR-Fallbacks für gescannte PDFs.
 
 ---
 
-### 💬 Interaktionsschritt 2: Initiale Domänen- & Modus-Wahl
+### 💬 Schritt 3: KI-gestütztes Qualitäts-Audit & Widerspruchsprüfung gegen die Aufgabenstellung
 
-#### Rückfrage der KI an den Nutzer:
-- Fachlicher Schwerpunkt (Rechnungen, Schema-API, Verträge, HR)?
-- Verarbeitungsmodus (Synchron, Asynchron, Hybrid)?
-
-#### Entscheidung des Nutzers:
+#### Verwendeter Prompt:
 ```text
-A1: (Recommended) Flexible Developer API: Generische Extraktion via benutzerdefiniertem JSON-Schema mit vorkonfiguriertem Profil für Rechnungen & Belege (Invoices/Receipts).
-A2: (Recommended) Synchron & Asynchron: Schnelle synchrone Analyse für kleine Dokumente plus asynchrone Job-Queue (Polling/Status-Check) für mehrseitige PDFs.
+take a look at the instructions as well as what has already been done, is there something we are missing and needs to be done? is there something that can be improved before handing it in?
+[+ Vollständige Aufgabenstellung & Bewertungskriterien]
 ```
 
-#### Was die KI damit gemacht hat:
-- Erste Ausarbeitung einer Produktspezifikation (zunächst auf Python/FastAPI-Basis), Erstellung von 11 User Stories, MoSCoW-Matrix und erster Widerspruchsprüfung.
+#### Ergebnis der KI (Audit-Befunde):
+Die KI führte einen systematischen Soll-Ist-Abgleich mit der Aufgabenstellung durch und deckte folgende Lücken und Schwachstellen auf:
+1. **Fehlendes Deliverable `docs/mvp.md`:** Im ersten Prompt fehlte `docs/mvp.md` in der Aufzählung, weshalb der MVP-Scope nur als Unterkapitel in `docs/requirements.md` stand.
+2. **Fehlende Kosten- & Abhängigkeitsanalyse:** Die Rahmenbedingung *„Externe APIs und Services sind erlaubt. Abhängigkeiten und Kosten müssen berücksichtigt werden“* war noch nicht explizit dokumentiert.
+3. **Kritik an der eigenen Vorarbeit (Must-Have-Inflation & Tech-Bias):** Die KI erkannte beim Abgleich mit Abschnitt 5 (*„Typische Fehler vermeiden“*), dass zu viele Stories als `Must-Have` markiert waren und Rust-Crates von den eigentlichen Anforderungen getrennt werden müssen.
+
+#### 🔍 Unsere Entscheidung & finale Korrektur:
+Auf Rückfrage der KI haben wir folgende verbindliche Architekturentscheidungen getroffen und in allen Dokumenten umgesetzt:
+- **MVP-Abgrenzung (`docs/mvp.md`):** Wir behalten sowohl das Standardprofil (`profile=invoice`) als auch das benutzerdefinierte JSON-Schema (`schema`) im MVP (`Must-Have`), beschränken das MVP aber strikt auf **textbasierte PDFs**. Reine Bild-Scans ohne Textlayer werden im MVP lokal erkannt und vor dem KI-Aufruf mit `HTTP 422 (EMPTY_TEXT_LAYER)` abgewiesen; der multimodale Vision-Fallback wandert als `Should-Have` (`US-07`) in die nächste Ausbaustufe.
+- **Saubere MoSCoW-Verteilung:** Reduktion von 8 auf **6 Must-Have User Stories** (`US-01` bis `US-06`), ergänzt durch **3 Should-Have** (`US-07` bis `US-09`) und **1 Could-Have** (`US-10`).
+- **Externe API & Kostenschutz:** Festlegung auf die **Google Gemini API (`gemini-2.5-flash`)** im kostenlosen Free-Tier für das Semesterprojekt, kombiniert mit technischen Kostenschutz-Regeln (lokaler Magic-Byte- und Textlayer-Check *vor* jedem API-Aufruf, 10-MB-/5-Seiten-Limit, Mock-Trait für kostenlose Offline-Tests).
+- **Trennung von Anforderung und Technologie:** In `docs/requirements.md` sind Anforderungen nun messbar und verhaltensbasiert formuliert (z. B. `< 50 ms` lokales Pre-Processing, `< 50 MB` RAM im Leerlauf, `100 %` JSON-Konformität), während die Wahl von **Rust** in Kapitel 6 logisch aus diesen Qualitätsanforderungen abgeleitet wird.
 
 ---
 
-### 💬 Interaktionsschritt 3: Präzisierung des Dokumentationszwecks
+## 3. Zusammenfassung: Wo wir KI-Vorschläge korrigiert haben
 
-#### Prompt des Nutzers (Wortlaut):
-```text
-ai-usage.md soll dokumentieren wie WIR KI verwendet haben. Bedeutet, dort dokumentierst du welche prompts wir verwendet haben, und was du damit gemacht hast. Späte reflektieren die menschen die an dem projekt gearbeitet haben wie das war
-```
-
-#### Was die KI damit gemacht hat:
-- Umstellung von `docs/ai-usage.md` auf ein reales, chronologisches Interaktionsprotokoll mit Original-Prompts und vorbereitetem Reflexionsteil für das Team.
-
----
-
-### 💬 Interaktionsschritt 4: Technologie-Entscheidung für Rust & MVP-Fokussierung
-
-#### Prompt des Nutzers (Wortlaut):
-```text
-Es wir wollen einmal zuerst einen MVP erstellen und definieren. Dafür wollen wir uns mal nur auf PDFs lesen können und als json ausgeben. Dafür wollen wir rust verwenden. 
-
-Projektidee und Problemstellung definieren
-- wie wir erklärt haben
-
-Zielgruppe und wichtigste Anwendungsfälle identifizieren
-- Wir denken developer sind unser zielgruppe
-
-AI zur Anforderungsanalyse einsetzen
-- Das bist du. Bitte danke unterstütze uns hierbei.
-
-Mindestens 8–10 User Stories erstellen
-- plane uns unsere 8-10 user stories. Wie können dann ausbauen.
-
-Funktionale und nichtfunktionale Anforderungen definieren
-- erstelle einen plan hierfür
-
-Anforderungen priorisieren (Must/Should/Could)
-- priorisiere unserse anforderungen
-
-MVP-Scope festlegen
-- PDF lesen, json ausgeben.
-
-Anforderungen auf Widersprüche und Unklarheiten prüfen
-```
-
-#### Was die KI damit gemacht hat:
-1. **Technologische Neuausrichtung auf Rust:**
-   - Komplette Neufassung der Spezifikationen auf das **Rust-Ökosystem** (`axum`, `tokio`, `serde`, `serde_json`, `reqwest`, `lopdf`/`pdf-extract`).
-   - Herausarbeiten der spezifischen Vorteile von Rust (Memory Safety, < 50 MB RAM, kein GC-Stutter, Single-Binary-Container).
-2. **Schärfung des MVP-Scopes:**
-   - **Klarer MVP-Fokus:** Reine PDF-Dateien einlesen (`application/pdf`) und als strikt typisiertes JSON (`application/json`) ausgeben. Keine Ablenkung durch Bildformate oder Datenbanken im ersten Schritt.
-3. **Ausrichtung auf die Zielgruppe Software-Entwickler:**
-   - Definition von Developer-Personas (Backend-Basti, Frontend-Fabi, DevOps-Dana).
-   - Fokus auf einfache Curl-Nutzung, saubere HTTP-Statuscodes und OpenAPI/Swagger-Generierung.
-4. **Erstellung von 10 entwicklerzentrierten User Stories (US-01 bis US-10):**
-   - Vollständige Gherkin-Akzeptanzkriterien für PDF-Upload, nativen Text-Parser in Rust, Serde-Validierung, Error-Handling für defekte PDFs und flüchtigen Speicher.
-5. **Rust-spezifische Widerspruchs- und Machbarkeitsprüfung:**
-   - *Blocking I/O in Tokio:* Lösung durch Auslagerung CPU-intensiven PDF-Parsings in `tokio::task::spawn_blocking`.
-   - *Statische Typen vs. dynamisches Schema:* Lösung durch duale Serde-Architektur (stark typisiertes `Invoice`-Struct vs. `serde_json::Value` mit `jsonschema`-Validierung für Custom Schemas).
-   - *Scans vs. Text-PDFs:* Intelligenter Fallback von nativem Text-Parsing auf Base64-Multimodal-Inferenz.
-6. **Aktualisierung aller Deliverables:**
-   - `README.md` (Rust-Architekturdiagramm, Curl-Vorschau, Badges).
-   - `docs/requirements.md` (Vollständige Rust-Produktspezifikation).
-   - `docs/ai-usage.md` (Aktualisiertes Protokoll).
+| Bereich | Ursprünglicher KI-Vorschlag | Menschliche Prüfung & Korrektur | Warum war die Korrektur wichtig? |
+| :--- | :--- | :--- | :--- |
+| **Must-Have-Priorisierung** | 8 von 10 User Stories als `Must-Have` (inkl. Vision-Fallback für Scans und DevOps-RAM-Story). | Reduziert auf **6 echte Must-Have-Stories**; Vision-Fallback auf `Should-Have` verschoben; RAM-Metrik rein als `NFA-02` geführt. | Vermeidet den Fehler *„Zu viele Must-have-Anforderungen“* und hält das MVP im Semester sicher machbar. |
+| **Technologiewahl vs. Anforderungen** | Spezifische Rust-Crates (`lopdf`, `axum`) standen direkt in den User Stories; `Rust` war als `NFA-01` definiert. | Anforderungen fachlich & messbar formuliert; Rust als abgeleitete Architekturentscheidung in eigenem Abschnitt begründet. | Vermeidet den Fehler *„Technologiewahl, bevor die Anforderungen verstanden wurden“*. |
+| **Widerspruch bei Request-Parametern** | `profile=invoice` und `schema={...}` standen unverbunden nebeneinander. | Explizite **XOR-Regel** ergänzt: Ein Request muss genau einen der beiden Parameter enthalten, sonst `HTTP 400`. | Schließt eine echte Spezifikationslücke für die spätere Implementierung und Tests. |
+| **Externe API-Kosten & Fehlerpfade** | KI-API wurde als „Blackbox“ angenommen, die immer antwortet. | Lokalen Pre-Check (Magic-Bytes, Schema-Check, Textlayer-Check) vor den API-Call geschaltet + 15s Timeout & Kostenanalyse in `docs/mvp.md` ergänzt. | Verhindert unnötigen Token-Verbrauch bei ungültigen Dateien und erfüllt die Rahmenbedingungen. |
 
 ---
 
-## 3. Rollenverteilung & Zusammenarbeitsmodell
+## 4. Kritische Reflexion des Projektteams (Phase 1)
 
-| Dimension | Rolle des menschlichen Teams | Rolle des KI-Assistenten |
-| :--- | :--- | :--- |
-| **Technologie-Vorgabe** | Setzt die Leitplanke: **Rust** statt Python; Fokus auf **PDF-zu-JSON**. | Wählt passende Rust-Crates (`axum`, `tokio`, `serde`) und entwirft die Rust-spezifische Architektur. |
-| **Scope-Fokussierung** | Begrenzt den MVP-Scope bewusst auf das Wesentliche ("PDF lesen, JSON ausgeben"). | Definiert klare Grenzen (In-Scope vs. Out-of-Scope) und verhindert Feature-Creep. |
-| **Zielgruppen-Definition** | Definiert **Developer** als primäre Zielgruppe. | Formuliert zielgruppengerechte Personas, User Stories und CLI-/API-Beispiele. |
-| **Qualitätssicherung** | Hinterfragt und korrigiert die Richtung im Dialog. | Führt Widerspruchsprüfungen für das Rust-Ökosystem durch und garantiert Konsistenz. |
+### 4.1 Was hat durch den KI-Einsatz besonders gut funktioniert?
+- **Große Zeitersparnis bei Strukturierung & Gherkin-Kriterien:** Aus einer sehr offenen Aufgabenstellung (*„Dokumente hochladen, analysieren und strukturierte Daten extrahieren“*) konnten wir im Dialog schnell ein präzises Produktkonzept entwickeln. Besonders beim Ausformulieren konsistenter, überprüfbarer **Given-When-Then-Akzeptanzkriterien** und konkreter HTTP-Fehlerfälle (`400`, `413`, `422`, `502`, `504`) hat die KI die Dokumentationsarbeit erheblich beschleunigt.
+- **Aufdecken technischer Randfälle (Edge Cases):** Bei der Widerspruchsprüfung half die KI sehr effektiv dabei, frühzeitig auf Probleme hinzuweisen, die sonst erst beim Programmieren in Phase 2 aufgefallen wären – insbesondere die Frage, wie man statische Typisierung (für `profile=invoice`) mit dynamischer Laufzeit-Validierung (für `schema`) kombiniert und was bei PDFs ohne Textlayer passiert.
 
----
+### 4.2 Wo lagen die Grenzen und Risiken der KI?
+- **Tendenz zu Feature-Creep & Must-Have-Inflation:** Ohne klare menschliche Eingrenzung neigt die KI dazu, ein „perfektes Enterprise-Produkt“ zu spezifizieren und fast jede gute Idee als `Must-Have` einzustufen. Hätten wir den ersten Entwurf ungeprüft übernommen, wäre der Scope für ein einzelnes Semester zu groß geworden.
+- **Vermischung von „Was“ (Anforderung) und „Wie“ (Implementierung):** Sobald wir erwähnten, dass wir das Projekt in Rust umsetzen möchten, formulierte die KI selbst fachliche Anforderungen plötzlich als Bibliotheks-Vorgaben. Erst durch unser gezieltes Review gegen die Aufgabenstellung haben wir Anforderung und Technologieentscheidung wieder sauber getrennt.
 
-## 4. Spätere Reflexion durch das Projektteam (Menschliche Perspektive)
-
-> *Hinweis: Dieser Abschnitt wird im weiteren Projektverlauf von den beteiligten Studierenden/Entwicklern ausgefüllt, um die menschliche Erfahrung mit dem KI-Einsatz in Phase 1 zu reflektieren.*
-
-### 4.1 Leitfragen für die Team-Reflexion:
-1. **Effizienz & Zeitersparnis:**
-   - *Wie viel Zeit hat die KI bei der Ausarbeitung der Rust-spezifischen Anforderungen und User Stories im Gherkin-Format eingespart?*
-   - *(Hier Notizen des Teams eintragen)*
-2. **Technologischer Richtungswechsel (Python zu Rust):**
-   - *Wie gut hat die KI den Schwenk auf Rust und die damit verbundenen Besonderheiten (Tokio Blocking Tasks, Serde Typisierung) erfasst?*
-   - *(Hier Notizen des Teams eintragen)*
-3. **Menschliche Steuerung:**
-   - *Welche Entscheidungen des Teams waren entscheidend (z. B. MVP-Fokus auf PDF-only, Rust als Core-Sprache), um das Projekt realistisch zu halten?*
-   - *(Hier Notizen des Teams eintragen)*
-4. **Learnings für Phase 2 (Implementierung):**
-   - *Wie soll die KI in Phase 2 bei der Erstellung des `Cargo.toml`, der Axum-Handler und der Tests eingesetzt werden?*
-   - *(Hier Notizen des Teams eintragen)*
-
----
-
-### Vorläufiges Zwischenfazit des Projektteams (Stand Phase 1):
-- Durch die klare Vorgabe, **Rust** zu verwenden und den Scope radikal auf **„PDF rein -> JSON raus“** für **Entwickler** zu fokussieren, hat das Projekt ein messerscharfes Profil erhalten.
-- Die KI half entscheidend dabei, die theoretischen Stärken von Rust (Typsicherheit, Memory Safety, Async I/O) in konkrete funktionale und nichtfunktionale Anforderungen sowie Akzeptanzkriterien zu übersetzen.
-- Phase 1 ist damit mit einer umsetzbaren, widerspruchsfreien und realistischen Spezifikation abgeschlossen.
+### 4.3 Fazit & Ausblick auf Phase 2
+Die Verantwortung für den Scope und die Qualitätsmaßstäbe lag zu jedem Zeitpunkt beim Team: Die KI lieferte schnelle Entwürfe und strukturierte Analysen, während wir die strategischen Leitplanken (Fokus auf Entwickler, Beschränkung auf PDF-zu-JSON, realistisches MVP mit 6 Must-Haves, Kostenkontrolle über Gemini Flash) gesetzt und geschärft haben.  
+Für **Phase 2 (Implementierung)** bildet diese Spezifikation ein klares Fundament, auf dem wir die KI gezielt für Rust-Boilerplate (`axum`-Routing, `serde`-Modelle) und automatisierte Integrationstests einsetzen können.
