@@ -18,8 +18,8 @@ Entwickler stehen dabei vor drei typischen Problemen:
 3. **Direkte LLM-Aufrufe** liefern häufig unzuverlässige Text- oder Markdown-Antworten (` ```json ... ``` `) ohne harte Schema-Garantie, was in nachgelagerten Services zu Laufzeitfehlern führt.
 
 ### Projektidee
-**DocuPulse** löst dieses Problem durch eine schlanke, entwicklerzentrierte **Document Processing REST-API**.  
-Entwickler senden ein PDF-Dokument zusammen mit einem vordefinierten Profil (`profile=invoice`) oder einem eigenen JSON-Schema (`schema={...}`) an einen einzigen HTTP-Endpunkt (`POST /api/v1/extract`). DocuPulse prüft und parst das PDF lokal im Arbeitsspeicher, nutzt ein Sprachmodell (Google Gemini Flash) zur semantischen Strukturierung und garantiert durch strikte Server-Validierung, dass ausschließlich **100 % wohlgeformtes, schema-konformes JSON** zurückgegeben wird.
+**DocuPulse** löst dieses Problem durch eine schlanke, entwicklerzentrierte **Document Processing REST-API** mit einer **zweistufigen Local-First Hybrid-Architektur**.  
+Entwickler senden ein PDF-Dokument zusammen mit einem vordefinierten Profil (`profile=invoice`) oder einem eigenen JSON-Schema (`schema={...}`) an einen einzigen HTTP-Endpunkt (`POST /api/v1/extract`). DocuPulse prüft und parst das PDF lokal im Arbeitsspeicher, führt zuerst eine **lokale semantische Informationsextraktion** (kontextuelle Schlüssel-Wert-Erkennung, Datums-/Währungs-/Betragsnormalisierung und Positionsheuristiken in < 50 ms) durch und greift nur bei unvollständigen Ergebnissen oder komplexen Custom-Schemas auf einen **externen KI-Fallback (Google Gemini Flash)** zurück. Durch strikte Server-Validierung wird garantiert, dass ausschließlich **100 % wohlgeformtes, schema-konformes JSON** zurückgegeben wird.
 
 ---
 
@@ -27,9 +27,9 @@ Entwickler senden ein PDF-Dokument zusammen mit einem vordefinierten Profil (`pr
 
 DocuPulse richtet sich gezielt an **Software-Entwickler und API-Integratoren**:
 
-- **Backend- & Microservice-Entwickler:** Benötigen eine verlässliche, typsichere Schnittstelle, um PDF-Dokumente ohne eigenen Parsing-Code in strukturierte JSON-Objekte für ihre Geschäftslogik umzuwandeln.
-- **Fullstack- & Frontend-Entwickler:** Wollen Nutzern im Browser das Hochladen eines PDFs ermöglichen, um Formulare (z. B. Rechnungsdaten) innerhalb weniger Sekunden automatisch vorauszufüllen.
-- **DevOps- & Platform-Engineers:** Bevorzugen leichtgewichtige, zustandslose Services ohne Datenbank-Zwang, mit minimalem RAM-Verbrauch (< 50 MB) und einfacher Konfiguration per Umgebungsvariable.
+- **Backend- & Microservice-Entwickler:** Benötigen eine verlässliche, typsichere Schnittstelle, um PDF-Dokumente ohne eigenen Parsing-Code in strukturierte JSON-Objekte für ihre Geschäftslogik umzuwandeln – im Idealfall komplett lokal ohne externe API-Latenzen.
+- **Fullstack- & Frontend-Entwickler:** Wollen Nutzern im Browser das Hochladen eines PDFs ermöglichen, um Formulare (z. B. Rechnungsdaten) sofort automatisch vorauszufüllen.
+- **DevOps- & Platform-Engineers:** Bevorzugen leichtgewichtige, zustandslose Services ohne Datenbank-Zwang, mit minimalem RAM-Verbrauch (< 50 MB) und ohne schwere lokale ML-Container (> 1 GB).
 
 ---
 
@@ -38,10 +38,11 @@ DocuPulse richtet sich gezielt an **Software-Entwickler und API-Integratoren**:
 Das Ziel des Projekts ist die Entwicklung einer **realistischen, im Semester vollständig umsetzbaren und testbaren API**, die folgenden Mehrwert bietet:
 
 - **Fokussierter MVP-Durchstich („PDF rein → JSON raus“):** Ein klarer, synchroner REST-Endpunkt für textbasierte PDFs mit sofort nutzbarem Rechnungs-Profil (`invoice`) sowie dynamischer JSON-Schema-Unterstützung.
+- **Zweistufige Hybrid-Extraktion (Local-First + Cloud-AI Fallback):** Standardisierte Dokumente werden direkt durch die lokale semantische Extraktions-Engine in < 50 ms und zu 0 € API-Kosten aufgelöst (`"extraction_source": "local"`), während komplexe oder unkonventionelle Dokumente nahtlos durch den Gemini-Fallback abgedeckt werden (`"extraction_source": "cloud_ai"`).
 - **Strikte Schema- & Typgarantie:** Jede erfolgreiche API-Antwort (`HTTP 200`) ist garantiert valides JSON und entspricht dem angeforderten Schema – ohne Markdown-Reste oder Halluzinationen bei Datentypen.
-- **Kostenschutz durch lokale Vorprüfung:** Korrupte Dateien, falsche Dateiformate oder leere Dokumente werden lokal abgefangen, **bevor** ein kostenpflichtiger oder zeitintensiver externer KI-Aufruf stattfindet.
-- **Datenschutz (Zero Data Retention):** Alle Dokumente werden ausschließlich flüchtig im Arbeitsspeicher (In-Memory) verarbeitet und niemals auf der Festplatte persistiert.
-- **Ressourcenschonende Umsetzung in Rust:** Durch die Implementierung mit `axum`, `tokio` und `serde` erreicht der Service minimale Latenz im Pre-Processing und einen äußerst geringen Speicherbedarf.
+- **Kostenschutz durch lokale Vorprüfung:** Korrupte Dateien, falsche Dateiformate oder leere Dokumente werden lokal abgefangen, **bevor** externe Ressourcen beansprucht werden.
+- **Datenschutz (Zero Data Retention):** Alle Dokumente werden ausschließlich flüchtig im Arbeitsspeicher (In-Memory) verarbeitet und niemals auf der Festplatte persistiert; bei lokaler Extraktion verlassen 0 Bytes den Server.
+- **Ressourcenschonende Umsetzung in Rust:** Durch die Implementierung mit `axum`, `tokio`, `serde` und `regex` erreicht der Service minimale Latenz und einen äußerst geringen Speicherbedarf.
 
 ---
 
@@ -55,19 +56,22 @@ flowchart TD
         Router["HTTP Endpoint<br>POST /api/v1/extract"]
         Safety["Lokale Vorprüfung (In-Memory)<br>Größenlimit & Magic-Byte-Check (%PDF-)"]
         TextExtract["Lokaler PDF-Text-Parser<br>(Textlayer & Seitenzahl)"]
+        LocalSem["Stufe 1: Lokale Semantische Extraktion<br>(Kontext-/Key-Value-Parser, Normalisierung & Tabellenheuristik)"]
         SchemaVal["Strikte JSON- & Schema-Validierung<br>(Serde / JSON-Schema)"]
     end
 
-    subgraph ExternalAI["Externe KI-Schnittstelle"]
+    subgraph ExternalAI["Stufe 2: Externe KI-Schnittstelle (Fallback)"]
         Gemini["Google Gemini API<br>(Gemini Flash – Structured Output)"]
     end
 
     Developer -->|"Multipart POST: PDF + profile/schema"| Router
     Router --> Safety
-    Safety -->|"Ungültig / Kein PDF"| Error400["HTTP 400 / 413 JSON Error<br>(Kein KI-Aufruf / 0 Kosten)"]
+    Safety -->|"Ungültig / Kein PDF"| Error400["HTTP 400 / 413 JSON Error<br>(0 Kosten)"]
     Safety -->|"Valides PDF"| TextExtract
     TextExtract -->|"Kein Textlayer im MVP"| Error422["HTTP 422 JSON Error<br>(Scan im MVP abgewiesen)"]
-    TextExtract -->|"Extrahierter Text"| Gemini
+    TextExtract -->|"Extrahierter Text"| LocalSem
+    LocalSem -->|"Alle Pflichtfelder lokal erkannt"| SchemaVal
+    LocalSem -->|"Unvollständig / Komplexes Schema"| Gemini
     Gemini -->|"Roh-JSON"| SchemaVal
     SchemaVal -->|"Valides JSON (HTTP 200)"| Developer
     SchemaVal -.->|"Schema-Verletzung (HTTP 422)"| Developer
@@ -90,6 +94,7 @@ curl -X POST "http://localhost:8000/api/v1/extract" \
 ```json
 {
   "status": "success",
+  "extraction_source": "local",
   "document": {
     "filename": "rechnung.pdf",
     "pages": 1
@@ -110,7 +115,7 @@ curl -X POST "http://localhost:8000/api/v1/extract" \
       }
     ]
   },
-  "processing_time_ms": 1840
+  "processing_time_ms": 18
 }
 ```
 
@@ -141,13 +146,13 @@ PAISE-Projekt/
 ├── README.md               # Projektüberblick: Idee, Problem, Zielgruppe & Projektziel
 │
 ├── docs/
-│   ├── requirements.md     # Detaillierte Anforderungen (10 User Stories, FA, NFA, MoSCoW, Konfliktprüfung)
-│   ├── mvp.md              # MVP-Scope: In-/Out-of-Scope, End-to-End-Flow, API-Kosten & Abhängigkeiten
+│   ├── requirements.md     # Detaillierte Anforderungen (11 User Stories, FA, NFA, MoSCoW, Konfliktprüfung)
+│   ├── mvp.md              # MVP-Scope: In-/Out-of-Scope, Hybrid-Flow, API-Kosten & Abhängigkeiten
 │   └── ai-usage.md         # Dokumentation des KI-Einsatzes, Prompts, Ergebnisse & kritische Reflexion
 │
 └── [Ab Phase 2: Cargo.toml, src/, tests/]
 ```
 
-- 📄 **[docs/requirements.md](docs/requirements.md):** Vollständige Anforderungsspezifikation, Personas, 10 User Stories mit überprüfbaren Given-When-Then-Akzeptanzkriterien, funktionale/nichtfunktionale Anforderungen und Widerspruchsprüfung.
-- 🎯 **[docs/mvp.md](docs/mvp.md):** Klare Abgrenzung des MVP-Scopes (In-Scope vs. Out-of-Scope), Kosten- und Abhängigkeitsanalyse für die externe Gemini API sowie Definition of Done.
+- 📄 **[docs/requirements.md](docs/requirements.md):** Vollständige Anforderungsspezifikation, Personas, 11 User Stories mit überprüfbaren Given-When-Then-Akzeptanzkriterien, funktionale/nichtfunktionale Anforderungen und Widerspruchsprüfung.
+- 🎯 **[docs/mvp.md](docs/mvp.md):** Klare Abgrenzung des MVP-Scopes (In-Scope vs. Out-of-Scope), Local-First-Hybrid-Pipeline, Kosten- und Abhängigkeitsanalyse für den externen Gemini-Fallback sowie Definition of Done.
 - 🤖 **[docs/ai-usage.md](docs/ai-usage.md):** Nachvollziehbare Dokumentation unseres KI-Einsatzes im Requirements-Engineering-Prozess inklusive kritischer Bewertung und manueller Korrekturen.
