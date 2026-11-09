@@ -62,15 +62,15 @@ flowchart TD
         Gemini["Google Gemini API<br>(Gemini Flash – Structured Output)"]
     end
 
-    Developer -->|Multipart POST: PDF + profile/schema| Router
+    Developer -->|"Multipart POST: PDF + profile/schema"| Router
     Router --> Safety
-    Safety -->|Ungültig / Kein PDF| Error400["HTTP 400 / 413 JSON Error<br>(Kein KI-Aufruf / 0 Kosten)"]
-    Safety -->|Valides PDF| TextExtract
-    TextExtract -->|Kein Textlayer im MVP| Error422["HTTP 422 JSON Error<br>(Scan im MVP abgewiesen)"]
-    TextExtract -->|Extrahierter Text| Gemini
-    Gemini -->|Roh-JSON| SchemaVal
-    SchemaVal -->|Valides JSON (HTTP 200)| Developer
-    SchemaVal -.->|Schema-Verletzung (HTTP 422)| Developer
+    Safety -->|"Ungültig / Kein PDF"| Error400["HTTP 400 / 413 JSON Error<br>(Kein KI-Aufruf / 0 Kosten)"]
+    Safety -->|"Valides PDF"| TextExtract
+    TextExtract -->|"Kein Textlayer im MVP"| Error422["HTTP 422 JSON Error<br>(Scan im MVP abgewiesen)"]
+    TextExtract -->|"Extrahierter Text"| Gemini
+    Gemini -->|"Roh-JSON"| SchemaVal
+    SchemaVal -->|"Valides JSON (HTTP 200)"| Developer
+    SchemaVal -.->|"Schema-Verletzung (HTTP 422)"| Developer
     Error400 -.-> Developer
     Error422 -.-> Developer
 ```
